@@ -1,5 +1,7 @@
 twine==1.12.1
 mock==2.0.0
 django
+djangorestframework
+botocore
 yapf
 tox
