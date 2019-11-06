@@ -39,8 +39,8 @@ def get_aws_credentials() -> AWSCredentials:
             * token (string) - AWS session token
 
     """
-    access_key = getattr(settings, 'AWS_ACCESS_KEY_ID', None)
-    secret_access_key = getattr(settings, 'AWS_SECRET_ACCESS_KEY', None)
+    access_key = getattr(settings, 'AWS_S3_ACCESS_KEY_ID', None)
+    secret_access_key = getattr(settings, 'AWS_S3_SECRET_ACCESS_KEY', None)
     token = None
 
     if access_key is None or secret_access_key is None:
