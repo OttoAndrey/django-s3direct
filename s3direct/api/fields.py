@@ -1,0 +1,79 @@
+from urllib.parse import unquote, urlparse
+
+from django.conf import settings
+from django.core.files.storage import default_storage
+from django.core.validators import URLValidator
+from django.utils.translation import ugettext_lazy as _
+
+from rest_framework import serializers
+from rest_framework.settings import api_settings
+
+
+class S3DirectUploadURLField(serializers.URLField):
+    """Special URL serializer field for S3.
+
+    This field allows to save file from its link without domain.
+
+    """
+    def __init__(self, **kwargs):
+        """Custom initialization.
+
+        Add URLValidator to self, but don't add it to self.validators, because
+        now validation is called after `to_internal_value`. So it provides
+        validation before `to_internal_value`.
+
+        """
+        super(serializers.URLField, self).__init__(**kwargs)
+        self.validator = URLValidator(message=self.error_messages['invalid'])
+
+    def to_internal_value(self, data):
+        """Validate `data` and convert it to internal value.
+
+        Cut domain from url to save it in file field.
+
+        """
+        if not isinstance(data, str):
+            self.fail('invalid')
+        self.validator(data)
+
+        # Crop server domain and port and get relative path to avatar
+        file_url = urlparse(data).path
+
+        if file_url.startswith(settings.MEDIA_URL):
+            # In case of local storing crop the media prefix
+            file_url = file_url[len(settings.MEDIA_URL):]
+
+        elif (getattr(settings, 'AWS_STORAGE_BUCKET_NAME') and
+              settings.AWS_STORAGE_BUCKET_NAME in file_url):
+            # In case of S3 upload crop S3 bucket name
+            file_url = file_url.split(
+                f'{settings.AWS_STORAGE_BUCKET_NAME}/'
+            )[-1]
+
+        # Normalize URL
+        file_url = unquote(unquote(file_url))
+
+        if not default_storage.exists(file_url):
+            raise serializers.ValidationError(
+                _('File does not exist.')
+            )
+
+        return file_url
+
+    def to_representation(self, value):
+        """Return full file url."""
+        if not value:
+            return None
+
+        use_url = getattr(self, 'use_url', api_settings.UPLOADED_FILES_USE_URL)
+
+        if use_url:
+            if not getattr(value, 'url', None):
+                # If the file has not been saved it may not have a URL.
+                return None
+            url = value.url
+            request = self.context.get('request', None)
+            if request is not None:
+                return request.build_absolute_uri(url)
+            return url
+        return value.name
