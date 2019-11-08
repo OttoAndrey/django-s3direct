@@ -4,6 +4,7 @@ import json
 from base64 import b64encode
 from collections import namedtuple
 from datetime import datetime, timedelta
+from urllib.parse import urlparse
 
 from botocore.credentials import (InstanceMetadataFetcher,
                                   InstanceMetadataProvider)
@@ -26,6 +27,19 @@ def get_s3direct_destinations() -> dict:
     return getattr(settings, 'S3DIRECT_DESTINATIONS', None)
 
 
+def get_access_keys():
+    """Get AWS access keys."""
+    access_key = getattr(settings, 'AWS_S3_ACCESS_KEY_ID', None)
+    if not access_key:
+        access_key = getattr(settings, 'AWS_ACCESS_KEY_ID', None)
+
+    secret_access_key = getattr(settings, 'AWS_S3_SECRET_ACCESS_KEY', None)
+    if not secret_access_key:
+        secret_access_key = getattr(settings, 'AWS_SECRET_ACCESS_KEY', None)
+
+    return access_key, secret_access_key
+
+
 def get_aws_credentials() -> AWSCredentials:
     """Shortcut to get AWS credentials
 
@@ -39,8 +53,7 @@ def get_aws_credentials() -> AWSCredentials:
             * token (string) - AWS session token
 
     """
-    access_key = getattr(settings, 'AWS_S3_ACCESS_KEY_ID', None)
-    secret_access_key = getattr(settings, 'AWS_S3_SECRET_ACCESS_KEY', None)
+    access_key, secret_access_key = get_access_keys()
     token = None
 
     if access_key is None or secret_access_key is None:
@@ -312,10 +325,20 @@ def create_upload_data(
 
 def get_aws_endpoint(region) -> str:
     """Get aws bucket endpoint."""
-    minio_url = getattr(settings, 'AWS_S3_ENDPOINT_URL')
+    minio_url = get_minio_url()
 
     if minio_url:
         return minio_url
     if not region or region == 'us-east-1':
         return 's3.amazonaws.com'
     return f's3-{region}.amazonaws.com'
+
+
+def get_minio_url():
+    """Get minio url."""
+    endpoint = getattr(settings, 'AWS_S3_ENDPOINT_URL', '')
+    endpoint_parsed = urlparse(endpoint)
+
+    if endpoint_parsed.netloc:
+        return endpoint_parsed.netloc
+    return endpoint
