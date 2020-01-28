@@ -14,7 +14,9 @@ class S3DirectSerializer(serializers.Serializer):
         default=settings.DEFAULT_DESTINATION
     )
     filename = serializers.CharField(required=False, allow_null=True)
-    content_type = serializers.CharField(required=False)
+    content_type = serializers.CharField(
+        required=False, allow_null=True, allow_blank=True
+    )
 
 
 class S3UploadSerializer(serializers.Serializer):

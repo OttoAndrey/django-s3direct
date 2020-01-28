@@ -11,7 +11,7 @@ urlpatterns = [
     url(r'^s3direct/', include('s3direct.urls')),
     url(r'^form/', include('cat.urls')),
     url(
-        '^api/get_upload_params/',
+        '^api/v1/s3direct/get_params/',
         S3DirectWrapper.as_view(),
         name='s3direct'
     ),
