@@ -1,4 +1,4 @@
-from urllib.parse import unquote_plus, urlparse
+from urllib.parse import unquote_plus, urlparse, unquote
 
 from django.conf import settings
 from django.core.files.storage import default_storage
@@ -51,7 +51,11 @@ class S3DirectUploadURLField(serializers.URLField):
             )[-1]
 
         # Normalize URL
-        file_url = unquote_plus(file_url)
+        is_minio = getattr(settings, 'AWS_IS_MINIO', False)
+        if is_minio:
+            file_url = unquote(unquote(file_url))
+        else:
+            file_url = unquote_plus(file_url)
 
         if not default_storage.exists(file_url):
             raise serializers.ValidationError(
