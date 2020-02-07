@@ -51,7 +51,7 @@ class S3DirectUploadURLField(serializers.URLField):
             )[-1]
 
         # Normalize URL
-        file_url = unquote_plus(unquote_plus(file_url))
+        file_url = unquote_plus(file_url)
 
         if not default_storage.exists(file_url):
             raise serializers.ValidationError(
