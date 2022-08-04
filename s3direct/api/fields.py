@@ -57,10 +57,15 @@ class S3DirectUploadURLField(serializers.URLField):
         else:
             file_url = unquote_plus(file_url)
 
-        if not default_storage.exists(file_url):
-            raise serializers.ValidationError(
-                _('File does not exist.')
-            )
+        # If url comes not from s3, then botocore on url validation will
+        # raise ParamValidationError
+        try:
+            if not default_storage.exists(file_url):
+                raise serializers.ValidationError(
+                    _("File does not exist."),
+                )
+        except ParamValidationError as error:
+            raise serializers.ValidationError(error) from error
 
         return file_url
 
