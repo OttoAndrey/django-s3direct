@@ -3,28 +3,31 @@ import uuid
 from datetime import datetime
 
 
-def get_random_filename(filename) -> str:
+def get_random_filename(filename: str) -> str:
     """Get random filename.
 
     Generation random filename that contains unique identifier and
     filename extension like: ``photo.jpg``.
 
     If extension is too long (we had issue with that), replace it with
-    special ".extension".
+    special ".incorrect" extension.
 
     Args:
         filename (str): Name of file.
 
     Returns:
-        new_filename (str): ``9841422d-c041-45a5-b7b3-467179f4f127.ext``.
+        new_filename (str): `9841422d-c041-45a5-b7b3-467179f4f127/name.ext`.
 
     """
     path = str(uuid.uuid4())
-    ext = os.path.splitext(filename)[1]
-    if len(ext) > 15:
-        ext = '.incorrect'
+    filename_parts = os.path.splitext(filename)
+    name, extension = filename_parts[-2], filename_parts[-1]
 
-    return ''.join([path, ext.lower()])
+    if len(extension) > 15:
+        extension = ".incorrect"
+
+    prepared_filename = name + extension.lower()
+    return os.path.join(path, prepared_filename)
 
 
 class S3PrefixedKey(object):
