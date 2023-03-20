@@ -1,4 +1,4 @@
-from urllib.parse import unquote_plus, urlparse, unquote
+from urllib.parse import unquote, unquote_plus, urlparse
 
 from django.conf import settings
 from django.core.files.storage import default_storage
@@ -7,6 +7,8 @@ from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
 from rest_framework.settings import api_settings
+
+from botocore.exceptions import ParamValidationError
 
 
 class S3DirectUploadURLField(serializers.URLField):
