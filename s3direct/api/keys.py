@@ -26,7 +26,7 @@ def get_random_filename(filename: str) -> str:
     if len(extension) > 15:
         extension = ".incorrect"
 
-    prepared_filename = name + extension.lower()
+    prepared_filename = f"{name}{extension.lower()}"
     return os.path.join(path, prepared_filename)
 
 
